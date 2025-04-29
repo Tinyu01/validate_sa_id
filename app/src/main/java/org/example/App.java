@@ -3,12 +3,35 @@
  */
 package org.example;
 
-public class App {
-    public String getGreeting() {
-        return "Hello World!";
-    }
+import java.util.Scanner;
 
+public class App {
     public static void main(String[] args) {
-        System.out.println(new App().getGreeting());
+        Scanner scanner = new Scanner(System.in);
+        System.out.println("South African ID Validator");
+        System.out.println("-------------------------");
+        System.out.println("Enter a 13-digit ID number to validate (or 'quit' to exit):");
+
+        while (true) {
+            System.out.print("ID: ");
+            String input = scanner.nextLine().trim();
+
+            if (input.equalsIgnoreCase("quit")) {
+                System.out.println("Exiting validator. Goodbye!");
+                break;
+            }
+
+            ValidateSaId.ValidationResult result = ValidateSaId.validateIdNumber(input);
+            System.out.printf("ID: %s -> %s%n", input, result.isValid() ? "Valid" : "Invalid");
+            if (!result.isValid()) {
+                System.out.println("Reasons for invalidity:");
+                for (String reason : result.reasons()) {
+                    System.out.println("- " + reason);
+                }
+            }
+            System.out.println();
+        }
+
+        scanner.close();
     }
 }
