@@ -3,35 +3,181 @@
  */
 package org.example;
 
+import java.util.List;
 import java.util.Scanner;
 
 public class App {
-    public static void main(String[] args) {
-        Scanner scanner = new Scanner(System.in);
-        System.out.println("South African ID Validator");
-        System.out.println("-------------------------");
-        System.out.println("Enter a 13-digit ID number to validate (or 'quit' to exit):");
-
-        while (true) {
-            System.out.print("ID: ");
-            String input = scanner.nextLine().trim();
-
-            if (input.equalsIgnoreCase("quit")) {
-                System.out.println("Exiting validator. Goodbye!");
-                break;
-            }
-
-            ValidateSaId.ValidationResult result = ValidateSaId.validateIdNumber(input);
-            System.out.printf("ID: %s -> %s%n", input, result.isValid() ? "Valid" : "Invalid");
-            if (!result.isValid()) {
-                System.out.println("Reasons for invalidity:");
-                for (String reason : result.reasons()) {
-                    System.out.println("- " + reason);
-                }
-            }
-            System.out.println();
+    private static final Scanner scanner = new Scanner(System.in);
+    private static final SaIdDatabaseService dbService = new SaIdDatabaseService() {
+        @Override
+        protected String getDbUrl() {
+            return "";
         }
+    };
 
+    public static void main(String[] args) {
+        System.out.println("South African ID Validator and Database");
+        System.out.println("--------------------------------------");
+        
+        // Initialize database
+        dbService.initDatabase();
+        
+        boolean running = true;
+        while (running) {
+            displayMenu();
+            int choice = getUserChoice();
+            
+            switch (choice) {
+                case 1 -> validateId();
+                case 2 -> storeValidId();
+                case 3 -> displayAllIds();
+                case 4 -> displaySortedByAge();
+                case 5 -> deleteId();
+                case 0 -> running = false;
+                default -> System.out.println("Invalid choice. Please try again.");
+            }
+            
+            if (running) {
+                System.out.println("\nPress Enter to continue...");
+                scanner.nextLine();
+            }
+        }
+        
+        System.out.println("Thank you for using the SA ID Validator. Goodbye!");
         scanner.close();
+    }
+    
+    private static void displayMenu() {
+        System.out.println("\nMAIN MENU");
+        System.out.println("1. Validate an ID number");
+        System.out.println("2. Add valid ID to database");
+        System.out.println("3. Display all stored IDs");
+        System.out.println("4. Display IDs sorted by age (oldest to youngest)");
+        System.out.println("5. Delete an ID from database");
+        System.out.println("0. Exit");
+        System.out.print("\nEnter your choice: ");
+    }
+    
+    private static int getUserChoice() {
+        try {
+            return Integer.parseInt(scanner.nextLine().trim());
+        } catch (NumberFormatException e) {
+            return -1; // Invalid choice will be handled in switch
+        }
+    }
+    
+    private static void validateId() {
+        System.out.println("\n--- ID VALIDATION ---");
+        System.out.print("Enter a 13-digit ID number to validate: ");
+        String idNumber = scanner.nextLine().trim();
+        
+        ValidateSaId.ValidationResult result = ValidateSaId.validateIdNumber(idNumber);
+        System.out.printf("ID: %s -> %s%n", idNumber, result.isValid() ? "Valid" : "Invalid");
+        
+        if (!result.isValid()) {
+            System.out.println("Reasons for invalidity:");
+            for (String reason : result.reasons()) {
+                System.out.println("- " + reason);
+            }
+        } else {
+            // If valid, show parsed information
+            SaIdRecord record = new SaIdRecord(idNumber);
+            System.out.println("\nID Information:");
+            System.out.println("- Birth Date: " + record.getBirthDate());
+            System.out.println("- Age: " + record.getAge());
+            System.out.println("- Gender: " + record.getGenderDescription());
+            System.out.println("- Status: " + record.getCitizenshipStatus());
+        }
+    }
+    
+    private static void storeValidId() {
+        System.out.println("\n--- STORE ID IN DATABASE ---");
+        System.out.print("Enter a 13-digit ID number to validate and store: ");
+        String idNumber = scanner.nextLine().trim();
+        
+        ValidateSaId.ValidationResult result = ValidateSaId.validateIdNumber(idNumber);
+        
+        if (!result.isValid()) {
+            System.out.println("Cannot store invalid ID. Validation failed:");
+            for (String reason : result.reasons()) {
+                System.out.println("- " + reason);
+            }
+            return;
+        }
+        
+        // Check if already exists
+        if (dbService.idNumberExists(idNumber)) {
+            System.out.println("This ID number already exists in the database.");
+            return;
+        }
+        
+        // Create and store record
+        SaIdRecord record = new SaIdRecord(idNumber);
+        boolean success = dbService.addIdRecord(record);
+        
+        if (success) {
+            System.out.println("ID successfully added to database.");
+            System.out.println(record);
+        } else {
+            System.out.println("Failed to add ID to database.");
+        }
+    }
+    
+    private static void displayAllIds() {
+        System.out.println("\n--- ALL STORED IDS ---");
+        List<SaIdRecord> records = dbService.getAllIdRecords();
+        
+        if (records.isEmpty()) {
+            System.out.println("No ID records found in the database.");
+            return;
+        }
+        
+        displayRecords(records);
+    }
+    
+    private static void displaySortedByAge() {
+        System.out.println("\n--- IDS SORTED BY AGE (OLDEST TO YOUNGEST) ---");
+        List<SaIdRecord> records = dbService.getIdRecordsSortedByAge();
+        
+        if (records.isEmpty()) {
+            System.out.println("No ID records found in the database.");
+            return;
+        }
+        
+        displayRecords(records);
+    }
+    
+    private static void displayRecords(List<SaIdRecord> records) {
+        System.out.printf("Found %d records:%n", records.size());
+        System.out.println("---------------------------------------------------");
+        for (int i = 0; i < records.size(); i++) {
+            System.out.printf("%d. %s%n", i + 1, records.get(i));
+        }
+        System.out.println("---------------------------------------------------");
+    }
+    
+    private static void deleteId() {
+        System.out.println("\n--- DELETE ID FROM DATABASE ---");
+        System.out.print("Enter the ID number to delete: ");
+        String idNumber = scanner.nextLine().trim();
+        
+        if (!dbService.idNumberExists(idNumber)) {
+            System.out.println("ID number not found in the database.");
+            return;
+        }
+        
+        System.out.print("Are you sure you want to delete this ID? (y/n): ");
+        String confirmation = scanner.nextLine().trim().toLowerCase();
+        
+        if (confirmation.equals("y")) {
+            boolean success = dbService.deleteIdRecord(idNumber);
+            if (success) {
+                System.out.println("ID successfully deleted from database.");
+            } else {
+                System.out.println("Failed to delete ID from database.");
+            }
+        } else {
+            System.out.println("Deletion cancelled.");
+        }
     }
 }

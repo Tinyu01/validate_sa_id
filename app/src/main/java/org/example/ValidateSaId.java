@@ -22,8 +22,11 @@ public class ValidateSaId {
     }
 
     private static int getDaysInMonth(int month, int yy) {
+        // Adjust year to full 4-digit format for leap year calculation
+        int fullYear = (yy <= 50 ? 2000 : 1900) + yy; // Assume 00-50 are 2000s, 51-99 are 1900s
+
         return switch (month) {
-            case 2 -> (yy % 4 == 0) ? 29 : 28; // Simplified leap year check
+            case 2 -> (fullYear % 4 == 0 && (fullYear % 100 != 0 || fullYear % 400 == 0)) ? 29 : 28; // Full leap year check
             case 4, 6, 9, 11 -> 30;
             default -> 31;
         };
