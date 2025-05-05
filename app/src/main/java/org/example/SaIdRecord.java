@@ -23,7 +23,7 @@ public class SaIdRecord {
         this.idNumber = idNumber;
         this.dateAdded = LocalDateTime.now();
         
-        // Extract birth date from ID number
+        // Extract birthdate from ID number
         int year = Integer.parseInt(idNumber.substring(0, 2));
         int month = Integer.parseInt(idNumber.substring(2, 4));
         int day = Integer.parseInt(idNumber.substring(4, 6));
