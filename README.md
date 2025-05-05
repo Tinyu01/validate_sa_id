@@ -1,152 +1,219 @@
-# South African ID Validator (2025 Edition)
+# South African ID Validator & Database
 
-A modern Java project built with Gradle and JUnit 5, using Test-Driven Development (TDD) to validate South African ID numbers.
+A modern Java application built with Gradle that validates South African ID numbers, providing detailed reasons for invalidity, and stores valid IDs in a SQLite database with sorting and management capabilities.
 
----
+## Features
 
-## 🧠 Overview
+- **ID Validation**: Validates South African ID numbers with detailed reasons for invalidity
+- **Database Storage**: Stores valid IDs in a SQLite database
+- **Data Extraction**: Extracts birth date, gender, and citizenship status from valid IDs
+- **ID Management**: View, sort, and delete stored IDs
+- **Sorting**: Sort IDs from oldest to youngest based on birth date
 
-This project implements a `ValidateSaId` class with a static method `isIdNumberValid(String id)` to validate South African ID numbers based on:
+## Technology Stack
 
-- ✅ **Length**: Must be exactly 13 digits.
-- 🔢 **Digits Only**: All characters must be numeric.
-- 📅 **Birth Date (YYMMDD)**: First 6 digits represent a valid date, including leap year logic.
-- 🪪 **Citizenship**: 11th digit must be `0` (South African) or `1` (Permanent resident).
-- ✔️ **Checksum (Luhn Algorithm)**: The 13th digit must match the checksum calculated using the Luhn algorithm.
+- Java 17
+- Gradle 8.x
+- SQLite (via sqlite-jdbc driver)
+- JUnit 5
 
----
-
-## ⚙️ Setup Instructions
+## Setup Instructions
 
 ### Prerequisites
+- Java Development Kit (JDK) 17 or later
+- Gradle 8.x
 
-- Java 17 or later
-- Gradle 8.x or later
+### Installation
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/Tinyu01/validate_sa_id.git
+   cd validate_sa_id
+   ```
 
-### Clone the Repository
+2. Build the project:
+   ```bash
+   gradle build
+   ```
 
+### Running the Application
+Run the application using Gradle:
 ```bash
-git clone https://github.com/yourusername/validate_sa_id.git
-cd validate_sa_id
-Build and Test
-bash
-Copy
-Edit
+gradle run
+```
+
+Or build and run the JAR file:
+```bash
 gradle build
-gradle test
-🚀 Usage
-java
-Copy
-Edit
-boolean isValid = ValidateSaId.isIdNumberValid("2001014800086");
-System.out.println(isValid); // true
-🗂 Project Structure
-swift
-Copy
-Edit
+java -jar build/libs/validate_sa_id-1.0-SNAPSHOT.jar
+```
+
+## Usage
+
+The application provides a menu-driven interface with the following options:
+
+1. **Validate an ID number**: Checks if an ID is valid and shows detailed validation results
+2. **Add valid ID to database**: Validates an ID and stores it if valid
+3. **Display all stored IDs**: Shows all IDs in the database
+4. **Display IDs sorted by age**: Lists IDs from oldest to youngest
+5. **Delete an ID from database**: Removes an ID from the database
+0. **Exit**: Closes the application
+
+### Example Interaction
+
+```
+South African ID Validator and Database
+--------------------------------------
+
+MAIN MENU
+1. Validate an ID number
+2. Add valid ID to database
+3. Display all stored IDs
+4. Display IDs sorted by age (oldest to youngest)
+5. Delete an ID from database
+0. Exit
+
+Enter your choice: 1
+
+--- ID VALIDATION ---
+Enter a 13-digit ID number to validate: 9001014800082
+ID: 9001014800082 -> Valid
+
+ID Information:
+- Birth Date: 1990-01-01
+- Age: 35
+- Gender: Male
+- Status: Citizen
+
+Press Enter to continue...
+
+MAIN MENU
+1. Validate an ID number
+2. Add valid ID to database
+3. Display all stored IDs
+4. Display IDs sorted by age (oldest to youngest)
+5. Delete an ID from database
+0. Exit
+
+Enter your choice: 2
+
+--- STORE ID IN DATABASE ---
+Enter a 13-digit ID number to validate and store: 9001014800082
+ID successfully added to database.
+ID: 9001014800082 | Birth Date: 1990-01-01 | Gender: Male | Citizen | Added: 2025-04-30
+
+Press Enter to continue...
+
+MAIN MENU
+1. Validate an ID number
+2. Add valid ID to database
+3. Display all stored IDs
+4. Display IDs sorted by age (oldest to youngest)
+5. Delete an ID from database
+0. Exit
+
+Enter your choice: 4
+
+--- IDS SORTED BY AGE (OLDEST TO YOUNGEST) ---
+Found 1 records:
+---------------------------------------------------
+1. ID: 9001014800082 | Birth Date: 1990-01-01 | Gender: Male | Citizen | Added: 2025-04-30
+---------------------------------------------------
+
+Press Enter to continue...
+```
+
+## Validation Rules
+
+South African ID numbers follow a specific format: `YYMMDD SSSS C Z Z`:
+
+- **YYMMDD**: Date of birth (YY=year, MM=month, DD=day)
+- **SSSS**: Serial number (includes gender information: females 0000-4999, males 5000-9999)
+- **C**: Citizenship status (0 for SA citizen, 1 for permanent resident)
+- **Z**: Checksum digits (calculated using the Luhn algorithm)
+
+The validator checks:
+- **Length**: Must be 13 digits
+- **Content**: All characters must be digits
+- **Date**: Valid date in YYMMDD format (with leap year handling)
+- **Citizenship**: Value must be 0 or 1
+- **Checksum**: Last digit verified using the Luhn algorithm
+
+## Project Structure
+
+```
 validate_sa_id/
-├── src/
-│   ├── main/java/com/example/
-│   │   └── ValidateSaId.java
-│   └── test/java/com/example/
-│       └── ValidateSaIdTest.java
+├── .gitignore
 ├── build.gradle
+├── settings.gradle
+├── src/
+│   ├── main/
+│   │   └── java/com/example/
+│   │       ├── App.java                 # Main application with CLI interface
+│   │       ├── ValidateSaId.java        # ID validation logic
+│   │       ├── SaIdRecord.java          # Entity class for ID records
+│   │       └── SaIdDatabaseService.java # Database operations manager
+│   └── test/
+│       └── java/com/example/
+│           ├── ValidateSaIdTest.java       # Tests for validation logic
+│           └── SaIdDatabaseServiceTest.java # Tests for database operations
 └── README.md
-✅ Testing
-Tests are located in ValidateSaIdTest.java and include checks for:
+```
 
-✔️ Valid ID numbers
+## Database Schema
 
-❌ Incorrect lengths (too short/too long)
+The application uses a SQLite database with a single table:
 
-❌ Non-digit characters
+### Table: sa_id_records
 
-❌ Invalid dates (e.g., Feb 30, leap year handling)
+| Column      | Type     | Description                            |
+|-------------|----------|----------------------------------------|
+| id          | INTEGER  | Primary key, auto-incremented          |
+| id_number   | TEXT     | SA ID number (unique)                  |
+| birth_date  | TEXT     | Birth date in ISO format (YYYY-MM-DD)  |
+| gender      | CHAR(1)  | Gender (M/F)                           |
+| citizenship | CHAR(1)  | Citizenship status (0/1)               |
+| date_added  | TEXT     | Date record was added to DB            |
 
-❌ Invalid citizenship digit
+## Testing
 
-❌ Incorrect checksum digit
-
-Run All Tests
-bash
-Copy
-Edit
+Run tests with Gradle:
+```bash
 gradle test
-🔁 Development Process
-Built using Test-Driven Development (TDD):
+```
 
-🟥 Write a failing test
+Tests include:
+- Validation of various ID formats and edge cases
+- Database operations (add, retrieve, delete)
+- Sorting functionality
+- Duplicate detection
 
-🟩 Write just enough code to pass
+## Code Overview
 
-🔁 Refactor and clean up
+### Key Classes
 
-💾 Commit with meaningful messages
+1. **ValidateSaId**: Handles validation logic with detailed error messages
+   - `validateIdNumber(String id)`: Returns a ValidationResult with status and reasons
+   - `isIdNumberValid(String id)`: Legacy method for backwards compatibility
 
-Example commits:
+2. **SaIdRecord**: Entity class representing a stored ID
+   - Parses ID number to extract demographic information
+   - Calculates age based on birth date
 
-bash
-Copy
-Edit
-git commit -m "Initial project setup with Gradle"
-git commit -m "Added valid ID test and basic implementation"
-git commit -m "Implemented length validation and tests"
-🧮 Checksum Algorithm (Luhn)
-To validate the checksum (13th digit), the Luhn algorithm is used:
+3. **SaIdDatabaseService**: Manages database operations
+   - `initDatabase()`: Creates necessary tables
+   - `addIdRecord(SaIdRecord)`: Adds new ID to database
+   - `getAllIdRecords()`: Retrieves all stored IDs
+   - `getIdRecordsSortedByAge()`: Returns IDs sorted by birth date
+   - `deleteIdRecord(String)`: Removes ID from database
 
-Sum the digits in the odd positions (excluding the last digit).
+4. **App**: Main application with UI logic
+   - Menu-driven interface to access all features
+   - Input validation and formatting
 
-Concatenate the digits in even positions, multiply by 2.
+## Contributing
 
-Add the digits of the result from step 2.
+Contributions are welcome! Please feel free to submit a Pull Request.
 
-Add the result of step 1 and 3.
+## License
 
-Subtract the final digit of the sum from 10. If result equals the last digit of the ID number, it's valid.
-
-📚 Example:
-ID Number: 8001015009087 → ✅ Valid (checksum passes)
-
-🧪 More Validation Examples
-
-ID Number	Valid?	Reason
-2001014800086	✅	Correct format and checksum
-2001014800089	❌	Invalid checksum
-0002295800082	✅	Valid leap year (29 Feb 2000)
-9913315800086	❌	Invalid date (31 Nov doesn't exist)
-200101A800086	❌	Non-digit character present
-20010148000867	❌	Too many digits
-200101480008	❌	Too few digits
-2001014800186	❌	Invalid citizenship digit (should be 0 or 1)
-📜 License
-MIT License © 2025 [Your Name]
-
-📝 Notes
-Main Class: The default App.java file created by gradle init is unused and can be deleted.
-
-GitHub Setup:
-
-bash
-Copy
-Edit
-git init
-git add .
-git commit -m "Initial commit"
-git remote add origin https://github.com/yourusername/validate_sa_id.git
-git push -u origin main
-Replace yourusername and [Your Name] with your actual GitHub username and full name.
-
-Happy coding! 🇿🇦
-
-kotlin
-Copy
-Edit
-
-Would you like this turned into an actual GitHub repository structure or zipped file too?
-
-
-
-
-
-
-
+This project is licensed under the MIT License - see the LICENSE file for details.

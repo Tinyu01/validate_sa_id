@@ -2,10 +2,33 @@
 *.class
 build/
 .gradle/
+bin/
 
 # Ignore IDE files
 .idea/
 *.iml
+.vscode/
+.settings/
+.classpath
+.project
+
+# Ignore database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Ignore logs
+*.log
 
 # Ignore OS-specific files
 .DS_Store
+Thumbs.db
+
+# Ignore packaged files
+*.jar
+*.war
+*.ear
+
+# Ignore backup files
+*~
+*.bak
