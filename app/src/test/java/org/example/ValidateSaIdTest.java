@@ -37,8 +37,17 @@ public class ValidateSaIdTest {
     }
 
     @Test
-    public void testLeapYear() {
-        assertTrue(ValidateSaId.isIdNumberValid("2002294800086")); // Feb 29, YY=20
+    public void testValidLeapYearIds() {
+        // Valid ID for Feb 29, 2020 (checksum digit: 5)
+        assertTrue(ValidateSaId.isIdNumberValid("2002294800085"));
+        // Valid ID for Feb 29, 2000 (checksum digit: 7)
+        assertTrue(ValidateSaId.isIdNumberValid("0002294800087"));
+    }
+
+    @Test
+    public void testInvalidLeapYearIds() {
+        assertFalse(ValidateSaId.isIdNumberValid("1902294800086")); // Feb 29, 1900 (not a leap year)
+        assertFalse(ValidateSaId.isIdNumberValid("2102294800086")); // Feb 29, 2100 (not a leap year)
     }
 
     @Test
